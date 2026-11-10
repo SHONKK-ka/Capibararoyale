@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: devkitpro/devkita64:latest
+      image: devkitpro/devkitppc:latest
 
     steps:
       - name: Checkout repo
@@ -17,28 +17,26 @@ jobs:
 
       - name: Install Wii U libs
         run: |
-          chmod -R 755 /opt/devkitpro/portlibs 2>/dev/null || true
           dkp-pacman -Sy --noconfirm
           dkp-pacman -S --noconfirm wiiu-dev wiiu-sdl2 wiiu-sdl2_image wiiu-sdl2_mixer wiiu-sdl2_ttf
-          chmod -R 755 /opt/devkitpro/portlibs 2>/dev/null || true
 
       - name: Build .wuhb
         run: |
+          set -e
           export DEVKITPRO=/opt/devkitpro
           export DEVKITPPC=/opt/devkitpro/devkitPPC
-          export PORTLIBS=/opt/devkitpro/portlibs/wiiu
-          export PATH=$DEVKITPRO/tools/bin:$PATH
-          chmod +x /opt/devkitpro/portlibs/wiiu/bin/* 2>/dev/null || true
+          export PATH=$DEVKITPRO/tools/bin:$DEVKITPPC/bin:$PATH
           ls -la
-          ls -la src || true
-          make -j$(nproc) || make
+          test -f Makefile || { echo "ERROR: no hay Makefile en la raíz"; exit 1; }
+          make clean || true
+          make -j$(nproc)
+          echo "=== Archivos .wuhb generados ==="
+          find . -name "*.wuhb"
+          test -n "$(find . -name '*.wuhb')" || { echo "ERROR: make no generó ningún .wuhb"; exit 1; }
 
       - name: Upload WUHB
         uses: actions/upload-artifact@v4
         with:
           name: CapibaraRoyale-WiiU
-          path: |
-            *.wuhb
-            **/*.wuhb
-            build/*.wuhb
+          path: "**/*.wuhb"
           if-no-files-found: error
