@@ -1,39 +1,56 @@
-# Capibara Royale - Makefile FIJO para flujo de trabajo (puntico verde)
-
 ifeq ($(strip $(DEVKITPRO)),)
-$(error "Please set DEVKITPRO")
+$(error "Falta DEVKITPRO")
 endif
-
-TOPDIR ?= $(CURDIR)
 
 include $(DEVKITPRO)/wut/share/wut_rules
 
-TARGET := CapibaraRoyale
-BUILD := build
-SOURCES := src
-DATA := activos
-INCLUDES := src
+.RECIPEPREFIX := >
+.DEFAULT_GOAL := all
 
-# Flags simples sin sdl2-config para evitar permission denied
-CFLAGS := -g -O2 -Wall -D__WIIU__ -I$(PORTLIBS)/include -I$(PORTLIBS)/include/SDL2 -I$(INCLUDES)
+TARGET   := CapibaraRoyale
+BUILD    := build
+SOURCES  := src
+CONTENT  := activos
+PORTLIBS := $(DEVKITPRO)/portlibs/wiiu
+PPC      := $(DEVKITPRO)/devkitPPC/bin/powerpc-eabi-
+CC       := $(PPC)gcc
+CXX      := $(PPC)g++
+
+CFLAGS   := -g -O2 -Wall $(MACHDEP) -D__WIIU__ \
+            -I$(WUT_ROOT)/include -I$(PORTLIBS)/include \
+            -I$(PORTLIBS)/include/SDL2 -I$(SOURCES)
 CXXFLAGS := $(CFLAGS) -std=c++17
-LDFLAGS := -g $(WUT_NEWLIB_LDFLAGS) $(WUT_STDCPP_LDFLAGS) -L$(PORTLIBS)/lib -lSDL2 -lSDL2_mixer -lSDL2_image -lm
+LDFLAGS  := -g $(MACHDEP) $(WUT_NEWLIB_LDFLAGS) $(WUT_STDCPP_LDFLAGS) \
+            -L$(PORTLIBS)/lib -L$(WUT_ROOT)/lib \
+            -lSDL2_mixer -lSDL2_image -lSDL2 -lwut -lm
 
-CFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-OFILES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o)
+CFILES   := $(notdir $(wildcard $(SOURCES)/*.c))
+CPPFILES := $(notdir $(wildcard $(SOURCES)/*.cpp))
+OFILES   := $(addprefix $(BUILD)/,$(CPPFILES:.cpp=.o) $(CFILES:.c=.o))
 
-# Si no hay src, busca en raiz
-ifeq ($(strip $(CPPFILES)),)
-CPPFILES := $(notdir $(wildcard *.cpp))
-CFILES := $(notdir $(wildcard *.c))
-SOURCES := .
-OFILES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o)
-endif
+.PHONY: all clean
 
-include $(DEVKITPRO)/wut/share/wut_rules
+all: $(BUILD)/$(TARGET).wuhb
 
 $(BUILD):
-	@mkdir -p $@
+> @mkdir -p $@
 
-$(shell chmod -R 755 $(PORTLIBS)/bin 2>/dev/null || true)
+$(BUILD)/%.o: $(SOURCES)/%.c | $(BUILD)
+> $(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/%.o: $(SOURCES)/%.cpp | $(BUILD)
+> $(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD)/$(TARGET).elf: $(OFILES)
+> $(CXX) $(OFILES) $(LDFLAGS) -o $@
+
+$(BUILD)/$(TARGET).rpx: $(BUILD)/$(TARGET).elf
+> elf2rpl $< $@
+
+$(BUILD)/$(TARGET).wuhb: $(BUILD)/$(TARGET).rpx
+> wuhbtool $< $@ --name="Capibara Royale" --short-name="Capibara Royale" \
+>   --author="Capibara" --icon=icon.png \
+>   $(if $(wildcard $(CONTENT)),--content=$(CONTENT),)
+
+clean:
+> rm -rf $(BUILD)
