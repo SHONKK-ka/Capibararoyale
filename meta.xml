@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<app version="1">
+  <name>Capibara Royale Wii U</name>
+  <coder>Jhon Londoño + Meta AI</coder>
+  <version>0.8.0 - Beta con Lobby y Caida</version>
+  <release_date>20261109</release_date>
+  <category>game</category>
+  <short_description>Battle Royale 3D - 20 jugadores, ciudades, cofres</short_description>
+  <long_description>Capibara Royale Wii U Edition - Battle Royale 3D inspirado en Super Animal Royale. 
+  20 jugadores, lobby con emotes, avion realista, caida libre controlada, 
+  2 ciudades con cofres dorados, tienda de arepas. Compilado desde celular.
+  Controles: Stick izquierdo mover, ZR disparar, B rodar, X recargar.
+  Creado con devkitPro + SDL2 + GX2.</long_description>
+  <ahb_access/>
+</app>
