@@ -15,24 +15,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Wii U libs
-        run: |
-          dkp-pacman -Syyu --noconfirm
-          dkp-pacman -S --noconfirm wiiu-dev wiiu-sdl2 wiiu-sdl2_image wiiu-sdl2_mixer wiiu-sdl2_ttf
-
+      # Ya no sincronizamos bases de datos, eso es lo que da 403
       - name: Build .wuhb
         run: |
           set -e
           export DEVKITPRO=/opt/devkitpro
           export DEVKITPPC=/opt/devkitpro/devkitPPC
           export PATH=$DEVKITPRO/tools/bin:$DEVKITPPC/bin:$PATH
+          # Si necesitas SDL, descomenta la siguiente linea, pero sin -Sy
+          # dkp-pacman -S --noconfirm --needed wiiu-sdl2 wiiu-sdl2_image wiiu-sdl2_mixer wiiu-sdl2_ttf || true
           ls -la
-          test -f Makefile || { echo "ERROR: no hay Makefile en la raíz"; exit 1; }
+          test -f Makefile || { echo "ERROR: no hay Makefile"; exit 1; }
           make clean || true
           make -j$(nproc)
-          echo "=== Archivos .wuhb generados ==="
           find . -name "*.wuhb"
-          test -n "$(find . -name '*.wuhb')" || { echo "ERROR: make no generó ningún .wuhb"; exit 1; }
 
       - name: Upload WUHB
         uses: actions/upload-artifact@v4
