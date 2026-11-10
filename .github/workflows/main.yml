@@ -17,15 +17,21 @@ jobs:
 
       - name: Install Wii U libs
         run: |
+          chmod -R 755 /opt/devkitpro/portlibs 2>/dev/null || true
           dkp-pacman -Sy --noconfirm
           dkp-pacman -S --noconfirm wiiu-dev wiiu-sdl2 wiiu-sdl2_image wiiu-sdl2_mixer wiiu-sdl2_ttf
+          chmod -R 755 /opt/devkitpro/portlibs 2>/dev/null || true
 
       - name: Build .wuhb
         run: |
           export DEVKITPRO=/opt/devkitpro
           export DEVKITPPC=/opt/devkitpro/devkitPPC
+          export PORTLIBS=/opt/devkitpro/portlibs/wiiu
           export PATH=$DEVKITPRO/tools/bin:$PATH
-          make -j$(nproc)
+          chmod +x /opt/devkitpro/portlibs/wiiu/bin/* 2>/dev/null || true
+          ls -la
+          ls -la src || true
+          make -j$(nproc) || make
 
       - name: Upload WUHB
         uses: actions/upload-artifact@v4
@@ -34,4 +40,5 @@ jobs:
           path: |
             *.wuhb
             **/*.wuhb
+            build/*.wuhb
           if-no-files-found: error
