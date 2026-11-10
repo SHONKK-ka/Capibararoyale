@@ -1,0 +1,37 @@
+name: Build Wii U WUHB
+
+on:
+  push:
+    branches: [ principal, main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkita64:latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Wii U libs
+        run: |
+          dkp-pacman -Sy --noconfirm
+          dkp-pacman -S --noconfirm wiiu-dev wiiu-sdl2 wiiu-sdl2_image wiiu-sdl2_mixer wiiu-sdl2_ttf
+
+      - name: Build .wuhb
+        run: |
+          export DEVKITPRO=/opt/devkitpro
+          export DEVKITPPC=/opt/devkitpro/devkitPPC
+          export PATH=$DEVKITPRO/tools/bin:$PATH
+          make -j$(nproc)
+
+      - name: Upload WUHB
+        uses: actions/upload-artifact@v4
+        with:
+          name: CapibaraRoyale-WiiU
+          path: |
+            *.wuhb
+            **/*.wuhb
+          if-no-files-found: error
