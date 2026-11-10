@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: devkitpro/devkitppc:latest
+      image: devkitpro/devkita64:latest
 
     steps:
       - name: Checkout repo
@@ -17,7 +17,7 @@ jobs:
 
       - name: Install Wii U libs
         run: |
-          dkp-pacman -Sy --noconfirm
+          dkp-pacman -Syyu --noconfirm
           dkp-pacman -S --noconfirm wiiu-dev wiiu-sdl2 wiiu-sdl2_image wiiu-sdl2_mixer wiiu-sdl2_ttf
 
       - name: Build .wuhb
